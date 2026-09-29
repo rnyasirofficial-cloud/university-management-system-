@@ -1380,3 +1380,277 @@ tbody td {
 [data-theme="light"] span {
   color: #374151;
 }
+
+/* Polished campus-inspired palette with readable text on every surface. */
+:root {
+  --primary: #8b7cff;
+  --primary-hover: #7563f2;
+  --primary-light: #c4b5fd;
+  --primary-dark: #5b4bd8;
+  --secondary: #38d9c4;
+  --accent: #f0a6ff;
+  --bg-main: #0b1020;
+  --bg-gradient: linear-gradient(135deg, #0b1020 0%, #101a35 48%, #171333 100%);
+  --bg-surface: #151d34;
+  --bg-card: #1b2743;
+  --bg-card-hover: #263657;
+  --border-color: rgba(148, 163, 255, 0.18);
+  --text-main: #eef2ff;
+  --text-muted: #b4bfdc;
+  --text-dim: #8995b8;
+  --glass-bg: rgba(21, 29, 52, 0.9);
+  --glass-border: rgba(148, 163, 255, 0.2);
+  --shadow-sm: 0 2px 8px rgba(3, 7, 18, 0.28);
+  --shadow-md: 0 8px 24px rgba(3, 7, 18, 0.3);
+  --shadow-lg: 0 18px 48px rgba(3, 7, 18, 0.42);
+  --shadow-glow: 0 0 28px rgba(139, 124, 255, 0.16);
+}
+
+body {
+  background-color: var(--bg-main);
+  background-image:
+    radial-gradient(ellipse at 14% 6%, rgba(56, 217, 196, 0.12), transparent 34%),
+    radial-gradient(ellipse at 85% 15%, rgba(139, 124, 255, 0.16), transparent 36%),
+    radial-gradient(ellipse at 75% 88%, rgba(240, 166, 255, 0.09), transparent 35%),
+    var(--bg-gradient);
+  color: var(--text-main);
+}
+
+.sidebar {
+  background: linear-gradient(180deg, #101a31 0%, #11152b 100%);
+  border-right-color: rgba(139, 124, 255, 0.22);
+  box-shadow: 8px 0 32px rgba(3, 7, 18, 0.22);
+}
+
+.sidebar-header,
+.topbar {
+  border-color: rgba(148, 163, 255, 0.16);
+}
+
+.main-wrapper {
+  background: transparent;
+}
+
+.topbar {
+  background: rgba(11, 16, 32, 0.82);
+  border-bottom-color: rgba(148, 163, 255, 0.18);
+}
+
+.page-title,
+.banner-left h3 {
+  background-image: linear-gradient(90deg, #72f0d8 0%, #a99aff 52%, #f0a6ff 100%);
+}
+
+.logo-badge {
+  background: linear-gradient(135deg, #36d7c2, #7669f5 58%, #d77df0);
+  box-shadow: 0 8px 24px rgba(118, 105, 245, 0.28);
+}
+
+.nav-group-title {
+  color: #a8b4d4;
+}
+
+.nav-link {
+  color: #c0c9e1;
+}
+
+.nav-link:hover {
+  background: linear-gradient(90deg, rgba(56, 217, 196, 0.12), rgba(139, 124, 255, 0.12));
+  color: #ffffff;
+}
+
+.nav-link.active {
+  background: linear-gradient(100deg, rgba(56, 217, 196, 0.19), rgba(139, 124, 255, 0.2), rgba(240, 166, 255, 0.1));
+  color: #bffcf1;
+  border-color: rgba(121, 220, 223, 0.34);
+  box-shadow: inset 3px 0 #57dec9, 0 5px 18px rgba(34, 211, 191, 0.08);
+}
+
+.nav-badge {
+  background: rgba(139, 124, 255, 0.2);
+  color: #d5ccff;
+}
+
+.user-card,
+.stat-card,
+.card {
+  background: linear-gradient(145deg, rgba(28, 40, 69, 0.96), rgba(20, 28, 51, 0.98));
+  border-color: rgba(148, 163, 255, 0.19);
+  box-shadow: 0 12px 34px rgba(3, 7, 18, 0.2);
+}
+
+.stat-card:nth-child(odd) .stat-info .stat-value {
+  color: #77e9dc;
+  text-shadow: 0 0 22px rgba(56, 217, 196, 0.24);
+}
+
+.stat-card:nth-child(even) .stat-info .stat-value {
+  color: #c1b4ff;
+  text-shadow: 0 0 22px rgba(139, 124, 255, 0.25);
+}
+
+.project-banner {
+  background: linear-gradient(115deg, rgba(27, 113, 117, 0.3), rgba(76, 67, 157, 0.28) 56%, rgba(130, 63, 143, 0.2));
+  border-color: rgba(149, 170, 255, 0.31);
+}
+
+.banner-left p {
+  color: #d1e6ff;
+}
+
+.member-chip {
+  color: #e3e8ff;
+  background: rgba(16, 24, 46, 0.64);
+  border-color: rgba(180, 191, 255, 0.24);
+}
+
+.card-header {
+  background: linear-gradient(100deg, rgba(56, 217, 196, 0.08), rgba(139, 124, 255, 0.1), rgba(240, 166, 255, 0.06));
+  border-bottom-color: rgba(148, 163, 255, 0.17);
+}
+
+.card-title,
+.btn-secondary {
+  color: #c8c0ff;
+}
+
+.search-input,
+.form-control,
+.role-switcher-select {
+  background-color: rgba(11, 16, 32, 0.66);
+  color: #f1f4ff;
+  border-color: rgba(148, 163, 255, 0.25);
+}
+
+.search-input::placeholder,
+.form-control::placeholder {
+  color: #9ba8c8;
+}
+
+.btn-primary {
+  background: linear-gradient(110deg, #25bda9, #6374ee 58%, #a45bd1);
+  box-shadow: 0 6px 18px rgba(99, 116, 238, 0.23);
+}
+
+.btn-secondary {
+  background: rgba(139, 124, 255, 0.12);
+  border-color: rgba(170, 156, 255, 0.3);
+}
+
+thead th {
+  background: #202d4b;
+  color: #baf8ef;
+  border-bottom-color: rgba(56, 217, 196, 0.35);
+}
+
+tbody tr:hover {
+  background: linear-gradient(90deg, rgba(56, 217, 196, 0.08), rgba(139, 124, 255, 0.1));
+}
+
+.modal-container {
+  background: linear-gradient(145deg, #1b2743, #151d34);
+}
+
+.day-column {
+  background: linear-gradient(160deg, #1e2c4b, #171f39);
+}
+
+.day-header {
+  color: #bcb2ff;
+}
+
+.slot-card {
+  background: linear-gradient(135deg, rgba(56, 217, 196, 0.12), rgba(139, 124, 255, 0.18));
+  border-color: rgba(160, 164, 255, 0.3);
+}
+
+.slot-time {
+  color: #b9fff2;
+}
+
+.slot-room {
+  color: #9eece4;
+}
+
+[data-theme="light"] body {
+  background-color: #f5f7ff;
+  background-image:
+    radial-gradient(ellipse at 10% 0%, rgba(45, 212, 191, 0.12), transparent 30%),
+    radial-gradient(ellipse at 90% 8%, rgba(129, 140, 248, 0.14), transparent 32%),
+    linear-gradient(135deg, #f8fbff, #f4f3ff 60%, #fff8ff);
+  color: #192544;
+}
+
+[data-theme="light"] .main-wrapper {
+  background: transparent;
+}
+
+[data-theme="light"] .sidebar {
+  background: linear-gradient(180deg, #ffffff 0%, #f4f7ff 100%);
+}
+
+[data-theme="light"] .project-banner {
+  background: linear-gradient(110deg, #d9faf3, #e7e5ff 58%, #f8e5fb);
+  border-color: #c8c9fa;
+}
+
+[data-theme="light"] .banner-left p {
+  color: #334264;
+}
+
+[data-theme="light"] .card,
+[data-theme="light"] .stat-card {
+  background: rgba(255, 255, 255, 0.88);
+  border-color: #e0e5f4;
+  box-shadow: 0 10px 28px rgba(46, 59, 105, 0.08);
+}
+
+[data-theme="light"] .card-header {
+  background: linear-gradient(100deg, #effdfa, #f1efff 60%, #fff5ff);
+}
+
+[data-theme="light"] .search-input,
+[data-theme="light"] .form-control,
+[data-theme="light"] .role-switcher-select {
+  background: #ffffff;
+  color: #192544;
+}
+
+[data-theme="light"] .member-chip {
+  background: rgba(255, 255, 255, 0.78);
+  color: #423b8f;
+}
+
+[data-theme="light"] .btn-primary {
+  background: linear-gradient(110deg, #089e91, #5b5ee7 62%, #924ac1);
+}
+
+[data-theme="light"] thead th {
+  background: #eeefff;
+  color: #423b8f;
+  border-bottom-color: #c6c8f5;
+}
+
+[data-theme="light"] tbody tr:hover {
+  background: linear-gradient(90deg, #ecfcf8, #f1efff);
+}
+
+[data-theme="light"] .day-column {
+  background: linear-gradient(160deg, #ffffff, #f4f5ff);
+}
+
+[data-theme="light"] .slot-card {
+  background: linear-gradient(135deg, #def8f2, #eae8ff);
+  border-color: #d0d0f4;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}
