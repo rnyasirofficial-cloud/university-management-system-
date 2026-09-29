@@ -12,7 +12,8 @@
 - **14 Relational 3NF Entities** (Exceeds required minimum of 10)
 - **Official GCUF Timetable & Faculty Pre-loaded:** Full 19-slot Monday-Friday schedule for **BS(SE) 5th Eve-B** with Dr. Khurram (SDaA), Dr. Qamar (CO&AL), Mr. Syed Sajjad (AI, HCI & CG), Mr. Nauman (Info. Sec), Mr. Noman S (Web Eng), and Mr. Talib (THQ III).
 - **Dedicated Student Portal (`view-student-portal`):** Displays student registration details, 7 active semester courses, today's lecture schedule, verified attendance (100%), and calculated CGPA (4.00) with official transcript printing.
-- **Interactive 3NF SQL Query Runner:** Execute custom SQL queries with multi-table joins or one-click preset queries right from the web browser.
+- **Full CRUD Support:** Create, read, update, and delete operations across the system entities and the SQL runner supports SELECT, INSERT, UPDATE, and DELETE statements in addition to database inspection.
+- **Interactive 3NF SQL Query Runner:** Execute custom SQL queries with multi-table joins, CRUD operations, or one-click preset queries right from the web browser.
 - **Object-Oriented Domain Architecture (`classes/`):** Clean domain models with business methods (GPA calculation, grade point computing, timetable conflict detection, attendance percentages).
 - **Interactive Web Dashboard:** Dark/light mode switcher, role-based demonstration mode (Admin, Teacher Dr. Khurram, Student Syed Ali Zaman), and 1-click database reset.
 - **Full Academic Documentation:**

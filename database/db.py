@@ -25,41 +25,49 @@ def get_connection() -> sqlite3.Connection:
 def init_database(force_reseed: bool = False) -> None:
     """
     Initializes the database using schema.sql and seed.sql if the database
-    is not created or if force_reseed is True.
+    is not created, is missing tables, or if force_reseed is True.
     """
     db_exists = DB_FILE.exists()
 
     conn = get_connection()
     cursor = conn.cursor()
+    required_tables = {
+        "Department", "Program", "Student", "Teacher", "Course",
+        "Semester", "Classroom", "Course_Offering", "Enrollment",
+        "Exam", "Result", "Attendance", "Timetable", "User_Account"
+    }
 
-    if not db_exists or force_reseed:
-        if force_reseed:
-            cursor.execute("PRAGMA foreign_keys = OFF;")
-            cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name != 'sqlite_sequence';")
-            for tbl in cursor.fetchall():
-                cursor.execute(f"DROP TABLE IF EXISTS \"{tbl['name']}\";")
-            cursor.execute("PRAGMA foreign_keys = ON;")
+    existing_tables = {
+        row[0] for row in cursor.execute(
+            "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%';"
+        ).fetchall()
+    }
 
-        # Read and execute schema
+    if force_reseed:
+        cursor.execute("PRAGMA foreign_keys = OFF;")
+        for tbl in list(existing_tables):
+            cursor.execute(f"DROP TABLE IF EXISTS \"{tbl}\";")
+        cursor.execute("PRAGMA foreign_keys = ON;")
+        existing_tables = set()
+
+    needs_schema = force_reseed or not db_exists or not required_tables.issubset(existing_tables)
+
+    if needs_schema:
         if SCHEMA_FILE.exists():
             with open(SCHEMA_FILE, "r", encoding="utf-8") as f:
                 schema_sql = f.read()
             cursor.executescript(schema_sql)
 
-        # Read and execute seed data
-        if SEED_FILE.exists():
-            with open(SEED_FILE, "r", encoding="utf-8") as f:
-                seed_sql = f.read()
-            cursor.executescript(seed_sql)
+        if not db_exists or force_reseed:
+            if SEED_FILE.exists():
+                with open(SEED_FILE, "r", encoding="utf-8") as f:
+                    seed_sql = f.read()
+                cursor.executescript(seed_sql)
 
         conn.commit()
         conn.close()
         print(f"[UMS Database] Successfully initialized and seeded at: {DB_FILE}")
     else:
-        # Run schema to ensure all tables exist
-        with open(SCHEMA_FILE, "r", encoding="utf-8") as f:
-            cursor.executescript(f.read())
-        conn.commit()
         conn.close()
 
 

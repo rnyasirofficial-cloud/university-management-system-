@@ -138,6 +138,99 @@ class TimetableCreate(BaseModel):
     start_time: str
     end_time: str
 
+class DepartmentUpdate(BaseModel):
+    department_name: Optional[str] = None
+    department_email: Optional[str] = None
+
+class ProgramUpdate(BaseModel):
+    program_name: Optional[str] = None
+    degree_level: Optional[str] = None
+    department_id: Optional[int] = None
+
+class StudentUpdate(BaseModel):
+    registration_no: Optional[str] = None
+    student_name: Optional[str] = None
+    email: Optional[str] = None
+    phone: Optional[str] = None
+    admission_date: Optional[str] = None
+    program_id: Optional[int] = None
+
+class TeacherUpdate(BaseModel):
+    teacher_name: Optional[str] = None
+    email: Optional[str] = None
+    phone: Optional[str] = None
+    designation: Optional[str] = None
+    department_id: Optional[int] = None
+
+class CourseUpdate(BaseModel):
+    course_code: Optional[str] = None
+    course_name: Optional[str] = None
+    credit_hours: Optional[int] = None
+    department_id: Optional[int] = None
+    course_description: Optional[str] = None
+
+class SemesterUpdate(BaseModel):
+    semester_name: Optional[str] = None
+    year: Optional[int] = None
+    start_date: Optional[str] = None
+    end_date: Optional[str] = None
+
+class ClassroomUpdate(BaseModel):
+    building_name: Optional[str] = None
+    room_number: Optional[str] = None
+    capacity: Optional[int] = None
+
+class OfferingUpdate(BaseModel):
+    course_id: Optional[int] = None
+    semester_id: Optional[int] = None
+    teacher_id: Optional[int] = None
+    room_id: Optional[int] = None
+    section: Optional[str] = None
+
+class EnrollmentUpdate(BaseModel):
+    student_id: Optional[int] = None
+    offering_id: Optional[int] = None
+    enrollment_date: Optional[str] = None
+    status: Optional[str] = None
+
+class ExamUpdate(BaseModel):
+    offering_id: Optional[int] = None
+    exam_type: Optional[str] = None
+    exam_date: Optional[str] = None
+    total_marks: Optional[float] = None
+
+class ResultUpdate(BaseModel):
+    student_id: Optional[int] = None
+    exam_id: Optional[int] = None
+    obtained_marks: Optional[float] = None
+
+class AttendanceUpdate(BaseModel):
+    student_id: Optional[int] = None
+    offering_id: Optional[int] = None
+    attendance_date: Optional[str] = None
+    status: Optional[str] = None
+
+class TimetableUpdate(BaseModel):
+    offering_id: Optional[int] = None
+    room_id: Optional[int] = None
+    day: Optional[str] = None
+    start_time: Optional[str] = None
+    end_time: Optional[str] = None
+
+class UserCreate(BaseModel):
+    username: str
+    password: str
+    role: str
+    student_id: Optional[int] = None
+    teacher_id: Optional[int] = None
+
+class UserUpdate(BaseModel):
+    username: Optional[str] = None
+    password: Optional[str] = None
+    role: Optional[str] = None
+    student_id: Optional[int] = None
+    teacher_id: Optional[int] = None
+
 
 # ============================================================================
 # AUTHENTICATION & SESSION
@@ -228,20 +321,46 @@ class SqlQueryRequest(BaseModel):
 
 @app.post("/api/execute-sql")
 def execute_custom_sql(req: SqlQueryRequest):
-    """Executes safe SELECT / PRAGMA SQL queries for the interactive schema runner."""
+    """Executes CRUD-capable SQL queries for the interactive schema runner."""
     q = req.query.strip()
-    clean_q = q.lstrip(";\n\r\t ").upper()
-    if not (clean_q.startswith("SELECT") or clean_q.startswith("PRAGMA") or clean_q.startswith("EXPLAIN")):
-        raise HTTPException(status_code=400, detail="Only SELECT and PRAGMA inspection queries are allowed in the SQL runner.")
+    if not q:
+        raise HTTPException(status_code=400, detail="SQL query cannot be empty.")
+
+    if q.count(";") > 1:
+        raise HTTPException(status_code=400, detail="Only a single SQL statement is allowed in the runner.")
+
+    clean_q = q.lstrip(";\n\r\t ")
+    normalized = clean_q.upper()
+    allowed_prefixes = ("SELECT", "PRAGMA", "EXPLAIN", "INSERT", "UPDATE", "DELETE")
+    if not normalized.startswith(allowed_prefixes):
+        raise HTTPException(status_code=400, detail="Only SELECT, INSERT, UPDATE, DELETE, PRAGMA, and EXPLAIN statements are allowed in the SQL runner.")
+    if "DROP " in normalized or "ALTER " in normalized or "CREATE " in normalized or "TRUNCATE " in normalized:
+        raise HTTPException(status_code=400, detail="DDL statements are disabled in the SQL runner for safety.")
+
     try:
-        rows = query_all(q)
-        columns = list(rows[0].keys()) if rows else []
-        return {
+        conn = get_connection()
+        cursor = conn.cursor()
+        cursor.execute(clean_q)
+        if clean_q.upper().startswith(("SELECT", "PRAGMA", "EXPLAIN")):
+            rows = cursor.fetchall()
+            columns = list(rows[0].keys()) if rows else []
+            conn.close()
+            return {
+                "success": True,
+                "count": len(rows),
+                "columns": columns,
+                "rows": [dict(row) for row in rows]
+            }
+        conn.commit()
+        result = {
             "success": True,
-            "count": len(rows),
-            "columns": columns,
-            "rows": rows
+            "count": cursor.rowcount,
+            "lastrowid": cursor.lastrowid,
+            "rows": [],
+            "columns": []
         }
+        conn.close()
+        return result
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
@@ -273,6 +392,42 @@ def create_department(dept: DepartmentCreate):
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
+@app.get("/api/departments/{department_id}")
+def get_department(department_id: int):
+    item = query_one("SELECT * FROM Department WHERE Department_ID = ?", (department_id,))
+    if not item:
+        raise HTTPException(status_code=404, detail="Department not found")
+    return item
+
+@app.put("/api/departments/{department_id}")
+def update_department(department_id: int, dept: DepartmentUpdate):
+    existing = query_one("SELECT * FROM Department WHERE Department_ID = ?", (department_id,))
+    if not existing:
+        raise HTTPException(status_code=404, detail="Department not found")
+
+    payload = {
+        "department_name": dept.department_name or existing["Department_Name"],
+        "department_email": dept.department_email or existing["Department_Email"]
+    }
+    model = Department(payload["department_name"], payload["department_email"])
+    model.validate()
+
+    execute_commit(
+        "UPDATE Department SET Department_Name = ?, Department_Email = ? WHERE Department_ID = ?",
+        (model.department_name, model.department_email, department_id)
+    )
+    return {"department_id": department_id, "message": "Department updated successfully"}
+
+@app.delete("/api/departments/{department_id}")
+def delete_department(department_id: int):
+    if not query_one("SELECT 1 FROM Department WHERE Department_ID = ?", (department_id,)):
+        raise HTTPException(status_code=404, detail="Department not found")
+    try:
+        execute_commit("DELETE FROM Department WHERE Department_ID = ?", (department_id,))
+        return {"department_id": department_id, "message": "Department deleted successfully"}
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
 
 # ============================================================================
 # MODULE 2: PROGRAMS
@@ -297,6 +452,48 @@ def create_program(prog: ProgramCreate):
             (model.program_name, model.degree_level, model.department_id)
         )
         return {"program_id": new_id, "message": "Program created successfully"}
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+@app.get("/api/programs/{program_id}")
+def get_program(program_id: int):
+    item = query_one("""
+        SELECT p.*, d.Department_Name
+        FROM Program p
+        JOIN Department d ON p.Department_ID = d.Department_ID
+        WHERE p.Program_ID = ?
+    """, (program_id,))
+    if not item:
+        raise HTTPException(status_code=404, detail="Program not found")
+    return item
+
+@app.put("/api/programs/{program_id}")
+def update_program(program_id: int, prog: ProgramUpdate):
+    existing = query_one("SELECT * FROM Program WHERE Program_ID = ?", (program_id,))
+    if not existing:
+        raise HTTPException(status_code=404, detail="Program not found")
+
+    payload = {
+        "program_name": prog.program_name or existing["Program_Name"],
+        "degree_level": prog.degree_level or existing["Degree_Level"],
+        "department_id": prog.department_id or existing["Department_ID"]
+    }
+    model = Program(payload["program_name"], payload["degree_level"], payload["department_id"])
+    model.validate()
+
+    execute_commit(
+        "UPDATE Program SET Program_Name = ?, Degree_Level = ?, Department_ID = ? WHERE Program_ID = ?",
+        (model.program_name, model.degree_level, model.department_id, program_id)
+    )
+    return {"program_id": program_id, "message": "Program updated successfully"}
+
+@app.delete("/api/programs/{program_id}")
+def delete_program(program_id: int):
+    if not query_one("SELECT 1 FROM Program WHERE Program_ID = ?", (program_id,)):
+        raise HTTPException(status_code=404, detail="Program not found")
+    try:
+        execute_commit("DELETE FROM Program WHERE Program_ID = ?", (program_id,))
+        return {"program_id": program_id, "message": "Program deleted successfully"}
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
@@ -339,6 +536,59 @@ def create_student(stud: StudentCreate):
             (model.registration_no, model.student_name, model.email, model.phone, model.admission_date, model.program_id)
         )
         return {"student_id": new_id, "message": "Student registered successfully"}
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+@app.get("/api/students/{student_id}")
+def get_student(student_id: int):
+    item = query_one("""
+        SELECT s.*, p.Program_Name, d.Department_Name
+        FROM Student s
+        JOIN Program p ON s.Program_ID = p.Program_ID
+        JOIN Department d ON p.Department_ID = d.Department_ID
+        WHERE s.Student_ID = ?
+    """, (student_id,))
+    if not item:
+        raise HTTPException(status_code=404, detail="Student not found")
+    return item
+
+@app.put("/api/students/{student_id}")
+def update_student(student_id: int, stud: StudentUpdate):
+    existing = query_one("SELECT * FROM Student WHERE Student_ID = ?", (student_id,))
+    if not existing:
+        raise HTTPException(status_code=404, detail="Student not found")
+
+    payload = {
+        "registration_no": stud.registration_no or existing["Registration_No"],
+        "student_name": stud.student_name or existing["Student_Name"],
+        "email": stud.email or existing["Email"],
+        "phone": stud.phone or existing["Phone"],
+        "admission_date": stud.admission_date or existing["Admission_Date"],
+        "program_id": stud.program_id or existing["Program_ID"]
+    }
+    model = Student(
+        registration_no=payload["registration_no"],
+        student_name=payload["student_name"],
+        email=payload["email"],
+        phone=payload["phone"],
+        admission_date=payload["admission_date"],
+        program_id=payload["program_id"]
+    )
+    model.validate()
+
+    execute_commit(
+        "UPDATE Student SET Registration_No = ?, Student_Name = ?, Email = ?, Phone = ?, Admission_Date = ?, Program_ID = ? WHERE Student_ID = ?",
+        (model.registration_no, model.student_name, model.email, model.phone, model.admission_date, model.program_id, student_id)
+    )
+    return {"student_id": student_id, "message": "Student updated successfully"}
+
+@app.delete("/api/students/{student_id}")
+def delete_student(student_id: int):
+    if not query_one("SELECT 1 FROM Student WHERE Student_ID = ?", (student_id,)):
+        raise HTTPException(status_code=404, detail="Student not found")
+    try:
+        execute_commit("DELETE FROM Student WHERE Student_ID = ?", (student_id,))
+        return {"student_id": student_id, "message": "Student deleted successfully"}
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
@@ -430,6 +680,50 @@ def create_teacher(tch: TeacherCreate):
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
+@app.get("/api/teachers/{teacher_id}")
+def get_teacher(teacher_id: int):
+    item = query_one("""
+        SELECT t.*, d.Department_Name
+        FROM Teacher t
+        JOIN Department d ON t.Department_ID = d.Department_ID
+        WHERE t.Teacher_ID = ?
+    """, (teacher_id,))
+    if not item:
+        raise HTTPException(status_code=404, detail="Teacher not found")
+    return item
+
+@app.put("/api/teachers/{teacher_id}")
+def update_teacher(teacher_id: int, tch: TeacherUpdate):
+    existing = query_one("SELECT * FROM Teacher WHERE Teacher_ID = ?", (teacher_id,))
+    if not existing:
+        raise HTTPException(status_code=404, detail="Teacher not found")
+
+    payload = {
+        "teacher_name": tch.teacher_name or existing["Teacher_Name"],
+        "email": tch.email or existing["Email"],
+        "phone": tch.phone or existing["Phone"],
+        "designation": tch.designation or existing["Designation"],
+        "department_id": tch.department_id or existing["Department_ID"]
+    }
+    model = Teacher(payload["teacher_name"], payload["email"], payload["phone"], payload["designation"], payload["department_id"])
+    model.validate()
+
+    execute_commit(
+        "UPDATE Teacher SET Teacher_Name = ?, Email = ?, Phone = ?, Designation = ?, Department_ID = ? WHERE Teacher_ID = ?",
+        (model.teacher_name, model.email, model.phone, model.designation, model.department_id, teacher_id)
+    )
+    return {"teacher_id": teacher_id, "message": "Teacher updated successfully"}
+
+@app.delete("/api/teachers/{teacher_id}")
+def delete_teacher(teacher_id: int):
+    if not query_one("SELECT 1 FROM Teacher WHERE Teacher_ID = ?", (teacher_id,)):
+        raise HTTPException(status_code=404, detail="Teacher not found")
+    try:
+        execute_commit("DELETE FROM Teacher WHERE Teacher_ID = ?", (teacher_id,))
+        return {"teacher_id": teacher_id, "message": "Teacher deleted successfully"}
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
 
 # ============================================================================
 # MODULE 5: COURSES
@@ -464,6 +758,50 @@ def create_course(crs: CourseCreate):
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
+@app.get("/api/courses/{course_id}")
+def get_course(course_id: int):
+    item = query_one("""
+        SELECT c.*, d.Department_Name
+        FROM Course c
+        JOIN Department d ON c.Department_ID = d.Department_ID
+        WHERE c.Course_ID = ?
+    """, (course_id,))
+    if not item:
+        raise HTTPException(status_code=404, detail="Course not found")
+    return item
+
+@app.put("/api/courses/{course_id}")
+def update_course(course_id: int, crs: CourseUpdate):
+    existing = query_one("SELECT * FROM Course WHERE Course_ID = ?", (course_id,))
+    if not existing:
+        raise HTTPException(status_code=404, detail="Course not found")
+
+    payload = {
+        "course_code": crs.course_code or existing["Course_Code"],
+        "course_name": crs.course_name or existing["Course_Name"],
+        "credit_hours": crs.credit_hours if crs.credit_hours is not None else existing["Credit_Hours"],
+        "department_id": crs.department_id or existing["Department_ID"],
+        "course_description": crs.course_description if crs.course_description is not None else existing["Course_Description"]
+    }
+    model = Course(payload["course_code"], payload["course_name"], payload["credit_hours"], payload["department_id"], payload["course_description"] or "")
+    model.validate()
+
+    execute_commit(
+        "UPDATE Course SET Course_Code = ?, Course_Name = ?, Credit_Hours = ?, Department_ID = ?, Course_Description = ? WHERE Course_ID = ?",
+        (model.course_code, model.course_name, model.credit_hours, model.department_id, model.course_description, course_id)
+    )
+    return {"course_id": course_id, "message": "Course updated successfully"}
+
+@app.delete("/api/courses/{course_id}")
+def delete_course(course_id: int):
+    if not query_one("SELECT 1 FROM Course WHERE Course_ID = ?", (course_id,)):
+        raise HTTPException(status_code=404, detail="Course not found")
+    try:
+        execute_commit("DELETE FROM Course WHERE Course_ID = ?", (course_id,))
+        return {"course_id": course_id, "message": "Course deleted successfully"}
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
 
 # ============================================================================
 # MODULE 6: SEMESTERS
@@ -485,6 +823,43 @@ def create_semester(sem: SemesterCreate):
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
+@app.get("/api/semesters/{semester_id}")
+def get_semester(semester_id: int):
+    item = query_one("SELECT * FROM Semester WHERE Semester_ID = ?", (semester_id,))
+    if not item:
+        raise HTTPException(status_code=404, detail="Semester not found")
+    return item
+
+@app.put("/api/semesters/{semester_id}")
+def update_semester(semester_id: int, sem: SemesterUpdate):
+    existing = query_one("SELECT * FROM Semester WHERE Semester_ID = ?", (semester_id,))
+    if not existing:
+        raise HTTPException(status_code=404, detail="Semester not found")
+
+    payload = {
+        "semester_name": sem.semester_name or existing["Semester_Name"],
+        "year": sem.year if sem.year is not None else existing["Year"],
+        "start_date": sem.start_date or existing["Start_Date"],
+        "end_date": sem.end_date or existing["End_Date"]
+    }
+    model = Semester(payload["semester_name"], payload["year"], payload["start_date"], payload["end_date"])
+
+    execute_commit(
+        "UPDATE Semester SET Semester_Name = ?, Year = ?, Start_Date = ?, End_Date = ? WHERE Semester_ID = ?",
+        (model.semester_name, model.year, model.start_date, model.end_date, semester_id)
+    )
+    return {"semester_id": semester_id, "message": "Semester updated successfully"}
+
+@app.delete("/api/semesters/{semester_id}")
+def delete_semester(semester_id: int):
+    if not query_one("SELECT 1 FROM Semester WHERE Semester_ID = ?", (semester_id,)):
+        raise HTTPException(status_code=404, detail="Semester not found")
+    try:
+        execute_commit("DELETE FROM Semester WHERE Semester_ID = ?", (semester_id,))
+        return {"semester_id": semester_id, "message": "Semester deleted successfully"}
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
 
 # ============================================================================
 # MODULE 7: CLASSROOMS
@@ -503,6 +878,42 @@ def create_classroom(cr: ClassroomCreate):
             (model.building_name, model.room_number, model.capacity)
         )
         return {"room_id": new_id, "message": "Classroom created successfully"}
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+@app.get("/api/classrooms/{room_id}")
+def get_classroom(room_id: int):
+    item = query_one("SELECT * FROM Classroom WHERE Room_ID = ?", (room_id,))
+    if not item:
+        raise HTTPException(status_code=404, detail="Classroom not found")
+    return item
+
+@app.put("/api/classrooms/{room_id}")
+def update_classroom(room_id: int, cr: ClassroomUpdate):
+    existing = query_one("SELECT * FROM Classroom WHERE Room_ID = ?", (room_id,))
+    if not existing:
+        raise HTTPException(status_code=404, detail="Classroom not found")
+
+    payload = {
+        "building_name": cr.building_name or existing["Building_Name"],
+        "room_number": cr.room_number or existing["Room_Number"],
+        "capacity": cr.capacity if cr.capacity is not None else existing["Capacity"]
+    }
+    model = Classroom(payload["building_name"], payload["room_number"], payload["capacity"])
+
+    execute_commit(
+        "UPDATE Classroom SET Building_Name = ?, Room_Number = ?, Capacity = ? WHERE Room_ID = ?",
+        (model.building_name, model.room_number, model.capacity, room_id)
+    )
+    return {"room_id": room_id, "message": "Classroom updated successfully"}
+
+@app.delete("/api/classrooms/{room_id}")
+def delete_classroom(room_id: int):
+    if not query_one("SELECT 1 FROM Classroom WHERE Room_ID = ?", (room_id,)):
+        raise HTTPException(status_code=404, detail="Classroom not found")
+    try:
+        execute_commit("DELETE FROM Classroom WHERE Room_ID = ?", (room_id,))
+        return {"room_id": room_id, "message": "Classroom deleted successfully"}
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
@@ -550,6 +961,53 @@ def create_offering(off: OfferingCreate):
             (model.course_id, model.semester_id, model.teacher_id, model.room_id, model.section)
         )
         return {"offering_id": new_id, "message": "Course offering created successfully"}
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+@app.get("/api/offerings/{offering_id}")
+def get_offering(offering_id: int):
+    item = query_one("""
+        SELECT co.*, c.Course_Code, c.Course_Name, s.Semester_Name, s.Year,
+               t.Teacher_Name, cr.Building_Name, cr.Room_Number
+        FROM Course_Offering co
+        JOIN Course c ON co.Course_ID = c.Course_ID
+        JOIN Semester s ON co.Semester_ID = s.Semester_ID
+        JOIN Teacher t ON co.Teacher_ID = t.Teacher_ID
+        JOIN Classroom cr ON co.Room_ID = cr.Room_ID
+        WHERE co.Offering_ID = ?
+    """, (offering_id,))
+    if not item:
+        raise HTTPException(status_code=404, detail="Course offering not found")
+    return item
+
+@app.put("/api/offerings/{offering_id}")
+def update_offering(offering_id: int, off: OfferingUpdate):
+    existing = query_one("SELECT * FROM Course_Offering WHERE Offering_ID = ?", (offering_id,))
+    if not existing:
+        raise HTTPException(status_code=404, detail="Course offering not found")
+
+    payload = {
+        "course_id": off.course_id or existing["Course_ID"],
+        "semester_id": off.semester_id or existing["Semester_ID"],
+        "teacher_id": off.teacher_id or existing["Teacher_ID"],
+        "room_id": off.room_id or existing["Room_ID"],
+        "section": off.section or existing["Section"]
+    }
+    model = CourseOffering(payload["course_id"], payload["semester_id"], payload["teacher_id"], payload["room_id"], payload["section"])
+
+    execute_commit(
+        "UPDATE Course_Offering SET Course_ID = ?, Semester_ID = ?, Teacher_ID = ?, Room_ID = ?, Section = ? WHERE Offering_ID = ?",
+        (model.course_id, model.semester_id, model.teacher_id, model.room_id, model.section, offering_id)
+    )
+    return {"offering_id": offering_id, "message": "Course offering updated successfully"}
+
+@app.delete("/api/offerings/{offering_id}")
+def delete_offering(offering_id: int):
+    if not query_one("SELECT 1 FROM Course_Offering WHERE Offering_ID = ?", (offering_id,)):
+        raise HTTPException(status_code=404, detail="Course offering not found")
+    try:
+        execute_commit("DELETE FROM Course_Offering WHERE Offering_ID = ?", (offering_id,))
+        return {"offering_id": offering_id, "message": "Course offering deleted successfully"}
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
@@ -609,8 +1067,49 @@ def create_enrollment(en: EnrollmentCreate):
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
+@app.get("/api/enrollments/{enrollment_id}")
+def get_enrollment(enrollment_id: int):
+    item = query_one("""
+        SELECT en.*, s.Student_Name, s.Registration_No,
+               c.Course_Code, c.Course_Name,
+               sem.Semester_Name, sem.Year,
+               t.Teacher_Name
+        FROM Enrollment en
+        JOIN Student s ON en.Student_ID = s.Student_ID
+        JOIN Course_Offering co ON en.Offering_ID = co.Offering_ID
+        JOIN Course c ON co.Course_ID = c.Course_ID
+        JOIN Semester sem ON co.Semester_ID = sem.Semester_ID
+        JOIN Teacher t ON co.Teacher_ID = t.Teacher_ID
+        WHERE en.Enrollment_ID = ?
+    """, (enrollment_id,))
+    if not item:
+        raise HTTPException(status_code=404, detail="Enrollment not found")
+    return item
+
+@app.put("/api/enrollments/{enrollment_id}")
+def update_enrollment(enrollment_id: int, en: EnrollmentUpdate):
+    existing = query_one("SELECT * FROM Enrollment WHERE Enrollment_ID = ?", (enrollment_id,))
+    if not existing:
+        raise HTTPException(status_code=404, detail="Enrollment not found")
+
+    payload = {
+        "student_id": en.student_id or existing["Student_ID"],
+        "offering_id": en.offering_id or existing["Offering_ID"],
+        "enrollment_date": en.enrollment_date or existing["Enrollment_Date"],
+        "status": en.status or existing["Status"]
+    }
+    model = Enrollment(payload["student_id"], payload["offering_id"], payload["enrollment_date"], payload["status"])
+
+    execute_commit(
+        "UPDATE Enrollment SET Student_ID = ?, Offering_ID = ?, Enrollment_Date = ?, Status = ? WHERE Enrollment_ID = ?",
+        (model.student_id, model.offering_id, model.enrollment_date, model.status, enrollment_id)
+    )
+    return {"enrollment_id": enrollment_id, "message": "Enrollment updated successfully"}
+
 @app.delete("/api/enrollments/{enrollment_id}")
 def drop_or_remove_enrollment(enrollment_id: int, permanent: bool = False):
+    if not query_one("SELECT 1 FROM Enrollment WHERE Enrollment_ID = ?", (enrollment_id,)):
+        raise HTTPException(status_code=404, detail="Enrollment not found")
     if permanent:
         execute_commit("DELETE FROM Enrollment WHERE Enrollment_ID = ?", (enrollment_id,))
         return {"message": "Enrollment permanently removed"}
@@ -650,6 +1149,51 @@ def create_exam(ex: ExamCreate):
             (model.offering_id, model.exam_type, model.exam_date, model.total_marks)
         )
         return {"exam_id": new_id, "message": "Exam scheduled successfully"}
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+@app.get("/api/exams/{exam_id}")
+def get_exam(exam_id: int):
+    item = query_one("""
+        SELECT e.*, c.Course_Code, c.Course_Name, co.Section,
+               sem.Semester_Name, sem.Year
+        FROM Exam e
+        JOIN Course_Offering co ON e.Offering_ID = co.Offering_ID
+        JOIN Course c ON co.Course_ID = c.Course_ID
+        JOIN Semester sem ON co.Semester_ID = sem.Semester_ID
+        WHERE e.Exam_ID = ?
+    """, (exam_id,))
+    if not item:
+        raise HTTPException(status_code=404, detail="Exam not found")
+    return item
+
+@app.put("/api/exams/{exam_id}")
+def update_exam(exam_id: int, ex: ExamUpdate):
+    existing = query_one("SELECT * FROM Exam WHERE Exam_ID = ?", (exam_id,))
+    if not existing:
+        raise HTTPException(status_code=404, detail="Exam not found")
+
+    payload = {
+        "offering_id": ex.offering_id or existing["Offering_ID"],
+        "exam_type": ex.exam_type or existing["Exam_Type"],
+        "exam_date": ex.exam_date or existing["Exam_Date"],
+        "total_marks": ex.total_marks if ex.total_marks is not None else existing["Total_Marks"]
+    }
+    model = Exam(payload["offering_id"], payload["exam_type"], payload["exam_date"], payload["total_marks"])
+
+    execute_commit(
+        "UPDATE Exam SET Offering_ID = ?, Exam_Type = ?, Exam_Date = ?, Total_Marks = ? WHERE Exam_ID = ?",
+        (model.offering_id, model.exam_type, model.exam_date, model.total_marks, exam_id)
+    )
+    return {"exam_id": exam_id, "message": "Exam updated successfully"}
+
+@app.delete("/api/exams/{exam_id}")
+def delete_exam(exam_id: int):
+    if not query_one("SELECT 1 FROM Exam WHERE Exam_ID = ?", (exam_id,)):
+        raise HTTPException(status_code=404, detail="Exam not found")
+    try:
+        execute_commit("DELETE FROM Exam WHERE Exam_ID = ?", (exam_id,))
+        return {"exam_id": exam_id, "message": "Exam deleted successfully"}
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
@@ -720,6 +1264,56 @@ def create_result(res: ResultCreate):
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
+@app.get("/api/results/{result_id}")
+def get_result(result_id: int):
+    item = query_one("""
+        SELECT r.*,
+               s.Student_Name, s.Registration_No,
+               e.Exam_Type, e.Total_Marks, e.Exam_Date,
+               c.Course_Code, c.Course_Name
+        FROM Result r
+        JOIN Student s ON r.Student_ID = s.Student_ID
+        JOIN Exam e ON r.Exam_ID = e.Exam_ID
+        JOIN Course_Offering co ON e.Offering_ID = co.Offering_ID
+        JOIN Course c ON co.Course_ID = c.Course_ID
+        WHERE r.Result_ID = ?
+    """, (result_id,))
+    if not item:
+        raise HTTPException(status_code=404, detail="Result not found")
+    return item
+
+@app.put("/api/results/{result_id}")
+def update_result(result_id: int, res: ResultUpdate):
+    existing = query_one("SELECT * FROM Result WHERE Result_ID = ?", (result_id,))
+    if not existing:
+        raise HTTPException(status_code=404, detail="Result not found")
+
+    payload = {
+        "student_id": res.student_id or existing["Student_ID"],
+        "exam_id": res.exam_id or existing["Exam_ID"],
+        "obtained_marks": res.obtained_marks if res.obtained_marks is not None else existing["Obtained_Marks"]
+    }
+    exam = query_one("SELECT Total_Marks FROM Exam WHERE Exam_ID = ?", (payload["exam_id"],))
+    if not exam:
+        raise HTTPException(status_code=404, detail="Exam not found")
+    total = float(exam["Total_Marks"])
+    if payload["obtained_marks"] > total:
+        raise HTTPException(status_code=400, detail=f"Obtained marks cannot exceed total marks ({total})")
+
+    grade, grade_point = Result.compute_grade(payload["obtained_marks"], total)
+    execute_commit(
+        "UPDATE Result SET Student_ID = ?, Exam_ID = ?, Obtained_Marks = ?, Grade = ?, Grade_Point = ? WHERE Result_ID = ?",
+        (payload["student_id"], payload["exam_id"], payload["obtained_marks"], grade, grade_point, result_id)
+    )
+    return {"result_id": result_id, "grade": grade, "grade_point": grade_point, "message": "Result updated successfully"}
+
+@app.delete("/api/results/{result_id}")
+def delete_result(result_id: int):
+    if not query_one("SELECT 1 FROM Result WHERE Result_ID = ?", (result_id,)):
+        raise HTTPException(status_code=404, detail="Result not found")
+    execute_commit("DELETE FROM Result WHERE Result_ID = ?", (result_id,))
+    return {"result_id": result_id, "message": "Result deleted successfully"}
+
 
 # ============================================================================
 # MODULE 12: ATTENDANCE
@@ -766,6 +1360,48 @@ def record_attendance(att: AttendanceCreate):
         return {"attendance_id": new_id, "message": "Attendance marked successfully"}
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
+
+@app.get("/api/attendance/{attendance_id}")
+def get_attendance(attendance_id: int):
+    item = query_one("""
+        SELECT a.*, s.Student_Name, s.Registration_No,
+               c.Course_Code, c.Course_Name
+        FROM Attendance a
+        JOIN Student s ON a.Student_ID = s.Student_ID
+        JOIN Course_Offering co ON a.Offering_ID = co.Offering_ID
+        JOIN Course c ON co.Course_ID = c.Course_ID
+        WHERE a.Attendance_ID = ?
+    """, (attendance_id,))
+    if not item:
+        raise HTTPException(status_code=404, detail="Attendance record not found")
+    return item
+
+@app.put("/api/attendance/{attendance_id}")
+def update_attendance(attendance_id: int, att: AttendanceUpdate):
+    existing = query_one("SELECT * FROM Attendance WHERE Attendance_ID = ?", (attendance_id,))
+    if not existing:
+        raise HTTPException(status_code=404, detail="Attendance record not found")
+
+    payload = {
+        "student_id": att.student_id or existing["Student_ID"],
+        "offering_id": att.offering_id or existing["Offering_ID"],
+        "attendance_date": att.attendance_date or existing["Attendance_Date"],
+        "status": att.status or existing["Status"]
+    }
+    model = Attendance(payload["student_id"], payload["offering_id"], payload["attendance_date"], payload["status"])
+
+    execute_commit(
+        "UPDATE Attendance SET Student_ID = ?, Offering_ID = ?, Attendance_Date = ?, Status = ? WHERE Attendance_ID = ?",
+        (model.student_id, model.offering_id, model.attendance_date, model.status, attendance_id)
+    )
+    return {"attendance_id": attendance_id, "message": "Attendance record updated successfully"}
+
+@app.delete("/api/attendance/{attendance_id}")
+def delete_attendance(attendance_id: int):
+    if not query_one("SELECT 1 FROM Attendance WHERE Attendance_ID = ?", (attendance_id,)):
+        raise HTTPException(status_code=404, detail="Attendance record not found")
+    execute_commit("DELETE FROM Attendance WHERE Attendance_ID = ?", (attendance_id,))
+    return {"attendance_id": attendance_id, "message": "Attendance record deleted successfully"}
 
 
 # ============================================================================
@@ -834,6 +1470,50 @@ def create_timetable_slot(slot: TimetableCreate):
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
+@app.get("/api/timetable/{timetable_id}")
+def get_timetable_slot(timetable_id: int):
+    item = query_one("""
+        SELECT tt.*, c.Course_Code, c.Course_Name, co.Section,
+               t.Teacher_Name, cr.Building_Name, cr.Room_Number
+        FROM Timetable tt
+        JOIN Course_Offering co ON tt.Offering_ID = co.Offering_ID
+        JOIN Course c ON co.Course_ID = c.Course_ID
+        JOIN Teacher t ON co.Teacher_ID = t.Teacher_ID
+        JOIN Classroom cr ON tt.Room_ID = cr.Room_ID
+        WHERE tt.Timetable_ID = ?
+    """, (timetable_id,))
+    if not item:
+        raise HTTPException(status_code=404, detail="Timetable slot not found")
+    return item
+
+@app.put("/api/timetable/{timetable_id}")
+def update_timetable_slot(timetable_id: int, slot: TimetableUpdate):
+    existing = query_one("SELECT * FROM Timetable WHERE Timetable_ID = ?", (timetable_id,))
+    if not existing:
+        raise HTTPException(status_code=404, detail="Timetable slot not found")
+
+    payload = {
+        "offering_id": slot.offering_id or existing["Offering_ID"],
+        "room_id": slot.room_id or existing["Room_ID"],
+        "day": slot.day or existing["Day"],
+        "start_time": slot.start_time or existing["Start_Time"],
+        "end_time": slot.end_time or existing["End_Time"]
+    }
+    model = Timetable(payload["offering_id"], payload["room_id"], payload["day"], payload["start_time"], payload["end_time"])
+
+    execute_commit(
+        "UPDATE Timetable SET Offering_ID = ?, Room_ID = ?, Day = ?, Start_Time = ?, End_Time = ? WHERE Timetable_ID = ?",
+        (model.offering_id, model.room_id, model.day, model.start_time, model.end_time, timetable_id)
+    )
+    return {"timetable_id": timetable_id, "message": "Timetable slot updated successfully"}
+
+@app.delete("/api/timetable/{timetable_id}")
+def delete_timetable_slot(timetable_id: int):
+    if not query_one("SELECT 1 FROM Timetable WHERE Timetable_ID = ?", (timetable_id,)):
+        raise HTTPException(status_code=404, detail="Timetable slot not found")
+    execute_commit("DELETE FROM Timetable WHERE Timetable_ID = ?", (timetable_id,))
+    return {"timetable_id": timetable_id, "message": "Timetable slot deleted successfully"}
+
 
 # ============================================================================
 # MODULE 14: USER ACCOUNTS
@@ -849,6 +1529,71 @@ def list_users():
         LEFT JOIN Teacher t ON u.Teacher_ID = t.Teacher_ID
         ORDER BY u.User_ID ASC
     """)
+
+@app.post("/api/users")
+def create_user(user: UserCreate):
+    if not user.username or not user.password:
+        raise HTTPException(status_code=400, detail="Username and password are required.")
+    if user.role not in UserAccount.ROLES:
+        raise HTTPException(status_code=400, detail=f"Role must be one of: {', '.join(UserAccount.ROLES)}")
+
+    model = UserAccount(user.username, user.password, user.role, user.student_id, user.teacher_id)
+    try:
+        new_id = execute_commit(
+            "INSERT INTO User_Account (Username, Password, Role, Student_ID, Teacher_ID) VALUES (?, ?, ?, ?, ?)",
+            (model.username, model.password, model.role, model.student_id, model.teacher_id)
+        )
+        return {"user_id": new_id, "message": "User account created successfully"}
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+@app.get("/api/users/{user_id}")
+def get_user(user_id: int):
+    item = query_one("""
+        SELECT u.User_ID, u.Username, u.Role, u.Student_ID, u.Teacher_ID,
+               s.Student_Name, t.Teacher_Name, u.Created_At
+        FROM User_Account u
+        LEFT JOIN Student s ON u.Student_ID = s.Student_ID
+        LEFT JOIN Teacher t ON u.Teacher_ID = t.Teacher_ID
+        WHERE u.User_ID = ?
+    """, (user_id,))
+    if not item:
+        raise HTTPException(status_code=404, detail="User not found")
+    return item
+
+@app.put("/api/users/{user_id}")
+def update_user(user_id: int, user: UserUpdate):
+    existing = query_one("SELECT * FROM User_Account WHERE User_ID = ?", (user_id,))
+    if not existing:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    payload = {
+        "username": user.username or existing["Username"],
+        "password": user.password or existing["Password"],
+        "role": user.role or existing["Role"],
+        "student_id": user.student_id if user.student_id is not None else existing["Student_ID"],
+        "teacher_id": user.teacher_id if user.teacher_id is not None else existing["Teacher_ID"]
+    }
+    if payload["role"] not in UserAccount.ROLES:
+        raise HTTPException(status_code=400, detail=f"Role must be one of: {', '.join(UserAccount.ROLES)}")
+
+    if user.password:
+        model = UserAccount(payload["username"], payload["password"], payload["role"], payload["student_id"], payload["teacher_id"], is_already_hashed=False)
+    else:
+        model = UserAccount(payload["username"], existing["Password"], payload["role"], payload["student_id"], payload["teacher_id"], is_already_hashed=True)
+
+    execute_commit(
+        "UPDATE User_Account SET Username = ?, Password = ?, Role = ?, Student_ID = ?, Teacher_ID = ? WHERE User_ID = ?",
+        (model.username, model.password, model.role, model.student_id, model.teacher_id, user_id)
+    )
+    return {"user_id": user_id, "message": "User account updated successfully"}
+
+@app.delete("/api/users/{user_id}")
+def delete_user(user_id: int):
+    if not query_one("SELECT 1 FROM User_Account WHERE User_ID = ?", (user_id,)):
+        raise HTTPException(status_code=404, detail="User not found")
+    execute_commit("DELETE FROM User_Account WHERE User_ID = ?", (user_id,))
+    return {"user_id": user_id, "message": "User account deleted successfully"}
 
 
 if __name__ == "__main__":
