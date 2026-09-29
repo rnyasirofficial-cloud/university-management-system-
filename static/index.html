@@ -1,0 +1,1155 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>University Management System | SDAA Project</title>
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- Stylesheet -->
+  <link rel="stylesheet" href="/static/css/style.css?v=blue_theme_v2">
+</head>
+<body>
+
+  <!-- ============================================================================
+       SIDEBAR NAVIGATION
+       ============================================================================ -->
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <div class="logo-badge">🏛️</div>
+      <div class="logo-title">
+        <h2>UniSys Core</h2>
+        <span>SDAA System 3NF</span>
+      </div>
+    </div>
+
+    <div class="nav-group-title">Main Navigation</div>
+    <ul class="nav-list">
+      <li>
+        <a class="nav-link active" data-view="dashboard">
+          <span class="nav-icon">📊</span> Dashboard
+        </a>
+      </li>
+      <li>
+        <a class="nav-link" data-view="student-portal">
+          <span class="nav-icon">🎒</span> Student Portal
+          <span class="nav-badge" style="background:#10b981; color:white;">Active</span>
+        </a>
+      </li>
+      <li>
+        <a class="nav-link" data-view="students">
+          <span class="nav-icon">🎓</span> Students
+          <span class="nav-badge" id="badge-students-count">0</span>
+        </a>
+      </li>
+      <li>
+        <a class="nav-link" data-view="teachers">
+          <span class="nav-icon">👨‍🏫</span> Faculty & Teachers
+          <span class="nav-badge" id="badge-teachers-count">0</span>
+        </a>
+      </li>
+      <li>
+        <a class="nav-link" data-view="courses">
+          <span class="nav-icon">📚</span> Courses
+          <span class="nav-badge" id="badge-courses-count">0</span>
+        </a>
+      </li>
+      <li>
+        <a class="nav-link" data-view="offerings">
+          <span class="nav-icon">📅</span> Course Offerings
+          <span class="nav-badge" id="badge-offerings-count">0</span>
+        </a>
+      </li>
+      <li>
+        <a class="nav-link" data-view="departments">
+          <span class="nav-icon">🏢</span> Departments & Programs
+        </a>
+      </li>
+      <li>
+        <a class="nav-link" data-view="classrooms">
+          <span class="nav-icon">🏛️</span> Classrooms & Labs
+        </a>
+      </li>
+    </ul>
+
+    <div class="nav-group-title">Academic Operations</div>
+    <ul class="nav-list">
+      <li>
+        <a class="nav-link" data-view="enrollments">
+          <span class="nav-icon">📝</span> Enrollments (M:N)
+          <span class="nav-badge" id="badge-enrollments-count">0</span>
+        </a>
+      </li>
+      <li>
+        <a class="nav-link" data-view="examinations">
+          <span class="nav-icon">📑</span> Exams & Results
+          <span class="nav-badge" id="badge-exams-count">0</span>
+        </a>
+      </li>
+      <li>
+        <a class="nav-link" data-view="attendance">
+          <span class="nav-icon">⏱️</span> Attendance Logs
+        </a>
+      </li>
+      <li>
+        <a class="nav-link" data-view="timetable">
+          <span class="nav-icon">🗓️</span> Weekly Timetable
+        </a>
+      </li>
+    </ul>
+
+    <div class="nav-group-title">System & Database</div>
+    <ul class="nav-list">
+      <li>
+        <a class="nav-link" data-view="users">
+          <span class="nav-icon">👥</span> User Accounts
+        </a>
+      </li>
+      <li>
+        <a class="nav-link" data-view="schema">
+          <span class="nav-icon">🗄️</span> 3NF Schema Inspector
+        </a>
+      </li>
+    </ul>
+
+    <div class="sidebar-footer">
+      <div class="user-card">
+        <div class="user-avatar" id="userAvatar">AD</div>
+        <div class="user-details">
+          <div class="user-name" id="currentUserName">Administrator</div>
+          <div class="user-role-badge" id="currentUserRole">Full Privileges</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ============================================================================
+       MAIN CONTENT WRAPPER
+       ============================================================================ -->
+  <main class="main-wrapper">
+    <!-- Topbar -->
+    <header class="topbar">
+      <div class="page-heading">
+        <h1 class="page-title" id="topbarPageTitle">Executive Dashboard & System Analytics</h1>
+      </div>
+      <div class="topbar-actions">
+        <!-- Demonstration Role Switcher -->
+        <select class="role-switcher-select" id="roleSwitcher" title="Switch Demonstration Role">
+          <option value="admin">Demo Role: Admin</option>
+          <option value="teacher">Demo Role: Faculty (Dr. Khurram - HOD SE)</option>
+          <option value="student">Demo Role: Student (Muhammad Yasir Ali)</option>
+        </select>
+        <button class="reset-db-btn" id="resetDbBtn" title="Reset sample data to initial state">🔄 Reset DB</button>
+      </div>
+    </header>
+
+    <div class="content-container">
+      <!-- Group Project Banner -->
+      <section class="project-banner">
+        <div class="banner-left">
+          <h3>Department of Software Engineering GCUF</h3>
+          <p>BS(SE) 5th Eve-B (Fall 2026) — 14 Relational 3NF Entities &amp; OOP Architecture</p>
+        </div>
+        <div class="group-members">
+          <div class="member-chip"><span></span> 1. Syed Ali Zaman</div>
+          <div class="member-chip"><span></span> 2. Muhammad Yasir Ali</div>
+          <div class="member-chip"><span></span> 3. Muhammad Umer</div>
+        </div>
+      </section>
+
+      <!-- ====================================================================
+           VIEW 1: DASHBOARD
+           ==================================================================== -->
+      <section class="view-section active" id="view-dashboard">
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-icon">🎓</div>
+            <div class="stat-info">
+              <div class="stat-value" id="stat-students">0</div>
+              <div class="stat-label">Total Students</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon">👨‍🏫</div>
+            <div class="stat-info">
+              <div class="stat-value" id="stat-teachers">0</div>
+              <div class="stat-label">Faculty Members</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon">📚</div>
+            <div class="stat-info">
+              <div class="stat-value" id="stat-courses">0</div>
+              <div class="stat-label">Active Courses</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon">📅</div>
+            <div class="stat-info">
+              <div class="stat-value" id="stat-offerings">0</div>
+              <div class="stat-label">Course Offerings</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon">📝</div>
+            <div class="stat-info">
+              <div class="stat-value" id="stat-enrollments">0</div>
+              <div class="stat-label">Enrollments</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon">⭐</div>
+            <div class="stat-info">
+              <div class="stat-value" id="stat-avg-gpa">0.00</div>
+              <div class="stat-label">Average Student GPA</div>
+            </div>
+          </div>
+        </div>
+
+        <div style="display:grid; grid-template-columns: 2fr 1fr; gap:24px;">
+          <!-- Recent Enrollments Table -->
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">📝 Recent Student Enrollments</div>
+              <button class="btn btn-primary btn-sm" onclick="openAddEnrollmentModal()">+ Enroll Student</button>
+            </div>
+            <div class="table-responsive">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Student</th>
+                    <th>Course</th>
+                    <th>Semester</th>
+                    <th>Date</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody id="dashboardRecentEnrollments">
+                  <!-- Populated dynamically -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Academic Departments Overview -->
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">🏢 Departments</div>
+            </div>
+            <div style="padding:16px;" id="dashboardDeptList">
+              <!-- Populated dynamically -->
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ====================================================================
+           VIEW: STUDENT PORTAL (DEDICATED STUDENT EXPERIENCE)
+           ==================================================================== -->
+      <section class="view-section" id="view-student-portal">
+        <!-- Student Header Card -->
+        <div class="card" style="background: linear-gradient(135deg, rgba(79, 70, 229, 0.16), rgba(6, 182, 212, 0.16)); border-color: rgba(79, 70, 229, 0.35); margin-bottom: 24px;">
+          <div style="padding: 24px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px;">
+            <div style="display:flex; align-items:center; gap:16px;">
+              <div style="width:60px; height:60px; border-radius:50%; background:linear-gradient(135deg, #4f46e5, #06b6d4); display:flex; align-items:center; justify-content:center; font-size:26px; color:white; font-weight:700; box-shadow:0 4px 12px rgba(79,70,229,0.35);">
+                MY
+              </div>
+              <div>
+                <div style="display:flex; gap:8px; align-items:center;">
+                  <h2 id="spStudentName" style="font-size:21px; font-weight:800;">Muhammad Yasir Ali</h2>
+                  <span class="badge badge-success">Enrolled &amp; Active</span>
+                </div>
+                <div style="font-size:13px; color:var(--text-muted); margin-top:3px;">
+                  Reg No: <strong id="spRegNo" style="color:var(--text-main);">FA24-BSE-001</strong> &bull; 
+                  Program: <strong id="spProgram" style="color:var(--secondary);">BS Software Engineering</strong> &bull; 
+                  Section: <strong>5th Eve-B</strong>
+                </div>
+              </div>
+            </div>
+            <div style="display:flex; gap:10px;">
+              <button class="btn btn-primary" onclick="openStudentTranscript(1)">🎓 Official Transcript &amp; GPA</button>
+              <button class="btn btn-secondary" onclick="navigateTo('timetable')">🗓️ View Weekly Timetable</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Student Metrics Cards -->
+        <div class="stats-grid" style="margin-bottom:24px;">
+          <div class="stat-card">
+            <div class="stat-icon">⭐</div>
+            <div class="stat-info">
+              <div class="stat-value" id="spCgpa">4.00</div>
+              <div class="stat-label">Cumulative GPA (CGPA)</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon">⏱️</div>
+            <div class="stat-info">
+              <div class="stat-value" id="spAttendance">100%</div>
+              <div class="stat-label">Verified Attendance</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon">📚</div>
+            <div class="stat-info">
+              <div class="stat-value">7 Courses</div>
+              <div class="stat-label">Registered This Semester</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon">🎖️</div>
+            <div class="stat-info">
+              <div class="stat-value">25 Credits</div>
+              <div class="stat-label">Credit Hour Load</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Split View: My Registered Courses & Schedule Highlights -->
+        <div style="display:grid; grid-template-columns: 3fr 2fr; gap:24px;">
+          <!-- My Enrolled Courses -->
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">📚 My Registered Courses &amp; Instructors</div>
+              <span class="badge badge-primary">BS(SE) 5th Eve-B</span>
+            </div>
+            <div class="table-responsive">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Code</th>
+                    <th>Course Title</th>
+                    <th>Credits</th>
+                    <th>Teacher</th>
+                    <th>Room</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody id="spCoursesTableBody">
+                  <!-- Populated dynamically -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Schedule Snapshot -->
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">🗓️ Today &amp; Upcoming Classes</div>
+            </div>
+            <div style="padding:16px;" id="spScheduleHighlights">
+              <!-- Populated dynamically -->
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ====================================================================
+           VIEW 2: STUDENTS
+           ==================================================================== -->
+      <section class="view-section" id="view-students">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">🎓 Student Directory (3NF Entity: Student)</div>
+            <div class="card-actions">
+              <input type="text" class="search-input" id="studentSearchInput" placeholder="🔍 Search by name, reg #, email...">
+              <button class="btn btn-primary" onclick="openAddStudentModal()">+ Register Student</button>
+            </div>
+          </div>
+          <div class="table-responsive">
+            <table>
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Reg Number</th>
+                  <th>Student Name</th>
+                  <th>Program</th>
+                  <th>Email</th>
+                  <th>Phone</th>
+                  <th>Admission</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="studentsTableBody">
+                <!-- Populated dynamically -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ====================================================================
+           VIEW 3: TEACHERS / FACULTY
+           ==================================================================== -->
+      <section class="view-section" id="view-teachers">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">👨‍🏫 Faculty & Instructors (3NF Entity: Teacher)</div>
+            <div class="card-actions">
+              <input type="text" class="search-input" id="teacherSearchInput" placeholder="🔍 Search faculty...">
+              <button class="btn btn-primary" onclick="openAddTeacherModal()">+ Add Faculty</button>
+            </div>
+          </div>
+          <div class="table-responsive">
+            <table>
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Teacher Name</th>
+                  <th>Designation</th>
+                  <th>Department</th>
+                  <th>Email</th>
+                  <th>Phone</th>
+                </tr>
+              </thead>
+              <tbody id="teachersTableBody">
+                <!-- Populated dynamically -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ====================================================================
+           VIEW 4: COURSES
+           ==================================================================== -->
+      <section class="view-section" id="view-courses">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">📚 Academic Courses Curriculum (3NF Entity: Course)</div>
+            <div class="card-actions">
+              <input type="text" class="search-input" id="courseSearchInput" placeholder="🔍 Search courses...">
+              <button class="btn btn-primary" onclick="openAddCourseModal()">+ Add Course</button>
+            </div>
+          </div>
+          <div class="table-responsive">
+            <table>
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Code</th>
+                  <th>Course Title</th>
+                  <th>Credit Hours</th>
+                  <th>Department</th>
+                  <th>Description</th>
+                </tr>
+              </thead>
+              <tbody id="coursesTableBody">
+                <!-- Populated dynamically -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ====================================================================
+           VIEW 5: COURSE OFFERINGS
+           ==================================================================== -->
+      <section class="view-section" id="view-offerings">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">📅 Semester Course Offerings (3NF Entity: Course_Offering)</div>
+            <button class="btn btn-primary" onclick="openAddOfferingModal()">+ Create Offering</button>
+          </div>
+          <div class="table-responsive">
+            <table>
+              <thead>
+                <tr>
+                  <th>Offering ID</th>
+                  <th>Course</th>
+                  <th>Section</th>
+                  <th>Semester</th>
+                  <th>Assigned Faculty</th>
+                  <th>Classroom / Room</th>
+                  <th>Enrollments</th>
+                </tr>
+              </thead>
+              <tbody id="offeringsTableBody">
+                <!-- Populated dynamically -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ====================================================================
+           VIEW 6: DEPARTMENTS & PROGRAMS
+           ==================================================================== -->
+      <section class="view-section" id="view-departments">
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:24px;">
+          <!-- Departments -->
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">🏢 Academic Departments</div>
+            </div>
+            <div class="table-responsive">
+              <table>
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Department Name</th>
+                    <th>Official Email</th>
+                    <th>Created</th>
+                  </tr>
+                </thead>
+                <tbody id="departmentsTableBody"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Programs -->
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">📁 Degree Programs</div>
+            </div>
+            <div class="table-responsive">
+              <table>
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Program Title</th>
+                    <th>Degree Level</th>
+                    <th>Department</th>
+                  </tr>
+                </thead>
+                <tbody id="programsTableBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ====================================================================
+           VIEW 7: CLASSROOMS
+           ==================================================================== -->
+      <section class="view-section" id="view-classrooms">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">🏛️ Campus Classrooms & Laboratories (3NF Entity: Classroom)</div>
+          </div>
+          <div class="table-responsive">
+            <table>
+              <thead>
+                <tr>
+                  <th>Room ID</th>
+                  <th>Building Name</th>
+                  <th>Room / Lab Number</th>
+                  <th>Seating Capacity</th>
+                </tr>
+              </thead>
+              <tbody id="classroomsTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ====================================================================
+           VIEW 8: ENROLLMENTS
+           ==================================================================== -->
+      <section class="view-section" id="view-enrollments">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">📝 Student Course Enrollments (3NF Entity: Enrollment)</div>
+            <button class="btn btn-primary" onclick="openAddEnrollmentModal()">+ Enroll Student</button>
+          </div>
+          <div class="table-responsive">
+            <table>
+              <thead>
+                <tr>
+                  <th>Enrollment #</th>
+                  <th>Student</th>
+                  <th>Course</th>
+                  <th>Semester</th>
+                  <th>Date</th>
+                  <th>Status</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="enrollmentsTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ====================================================================
+           VIEW 9: EXAMINATIONS & RESULTS
+           ==================================================================== -->
+      <section class="view-section" id="view-examinations">
+        <!-- Exams -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">📑 Scheduled Examinations (3NF Entity: Exam)</div>
+            <button class="btn btn-primary" onclick="openAddExamModal()">+ Schedule Exam</button>
+          </div>
+          <div class="table-responsive">
+            <table>
+              <thead>
+                <tr>
+                  <th>Exam ID</th>
+                  <th>Course Offering</th>
+                  <th>Type</th>
+                  <th>Exam Date</th>
+                  <th>Total Marks</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="examsTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Results -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">🏆 Examination Results & Grades (3NF Entity: Result)</div>
+          </div>
+          <div class="table-responsive">
+            <table>
+              <thead>
+                <tr>
+                  <th>Student</th>
+                  <th>Course</th>
+                  <th>Exam</th>
+                  <th>Marks</th>
+                  <th>Grade</th>
+                  <th>Grade Point</th>
+                </tr>
+              </thead>
+              <tbody id="resultsTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ====================================================================
+           VIEW 10: ATTENDANCE
+           ==================================================================== -->
+      <section class="view-section" id="view-attendance">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">⏱️ Class Attendance Records (3NF Entity: Attendance)</div>
+            <button class="btn btn-primary" onclick="openMarkAttendanceModal()">+ Mark Attendance</button>
+          </div>
+          <div class="table-responsive">
+            <table>
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Student</th>
+                  <th>Course</th>
+                  <th>Date</th>
+                  <th>Attendance Status</th>
+                </tr>
+              </thead>
+              <tbody id="attendanceTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ====================================================================
+           VIEW 11: TIMETABLE (VISUAL WEEKLY SCHEDULE)
+           ==================================================================== -->
+      <section class="view-section" id="view-timetable">
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <div class="card-title">🗓️ Department of Software Engineering GCUF — Official Timetable</div>
+              <div style="display:flex; gap:8px; align-items:center; margin-top:6px;">
+                <span class="badge badge-primary">BS(SE) 5th Eve-B</span>
+                <span class="badge badge-info">Term: Fall 2026</span>
+                <span class="badge badge-warning">6 Faculty | 7 Courses</span>
+              </div>
+            </div>
+            <button class="btn btn-primary" onclick="openAddTimetableModal()">+ Schedule Slot</button>
+          </div>
+          <div style="padding:20px;">
+            <div class="timetable-grid" id="timetableGridContainer">
+              <!-- Visual day columns populated dynamically -->
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ====================================================================
+           VIEW 12: USER ACCOUNTS
+           ==================================================================== -->
+      <section class="view-section" id="view-users">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">👥 User Accounts & Access Control (3NF Entity: User_Account)</div>
+          </div>
+          <div class="table-responsive">
+            <table>
+              <thead>
+                <tr>
+                  <th>User ID</th>
+                  <th>Username</th>
+                  <th>Role</th>
+                  <th>Associated Profile</th>
+                  <th>Created At</th>
+                </tr>
+              </thead>
+              <tbody id="usersTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ====================================================================
+           VIEW 13: 3NF SCHEMA INSPECTOR
+           ==================================================================== -->
+      <section class="view-section" id="view-schema">
+        <div class="card" style="margin-bottom:20px;">
+          <div class="card-header">
+            <div class="card-title">🗄️ Relational 3NF Architecture Verification (All 14 Tables)</div>
+          </div>
+          <div style="padding:20px; font-size:13.5px; color:var(--text-muted);">
+            This live inspector examines the running SQLite database catalog via <code>PRAGMA table_info</code> and <code>PRAGMA foreign_key_list</code>, verifying full Third Normal Form compliance across all 14 project entities.
+          </div>
+        </div>
+
+        <!-- Interactive SQL Runner Console -->
+        <div class="card" style="margin-bottom:24px;">
+          <div class="card-header">
+            <div class="card-title">💻 Interactive SQL Console (Query 3NF Relations)</div>
+            <div style="display:flex; gap:6px; flex-wrap:wrap;">
+              <button class="btn btn-secondary btn-sm" onclick="setPresetQuery(1)">Preset: Weekly Classes</button>
+              <button class="btn btn-secondary btn-sm" onclick="setPresetQuery(2)">Preset: Student Grades</button>
+              <button class="btn btn-secondary btn-sm" onclick="setPresetQuery(3)">Preset: Rooms &amp; Capacities</button>
+            </div>
+          </div>
+          <div style="padding:20px;">
+            <textarea id="sqlConsoleInput" class="sql-console" rows="3" placeholder="SELECT c.Course_Code, t.Day, t.Start_Time, t.End_Time, cr.Room_Number FROM Timetable t JOIN Course_Offering co ON t.Offering_ID = co.Offering_ID JOIN Course c ON co.Course_ID = c.Course_ID JOIN Classroom cr ON t.Room_ID = cr.Room_ID;"></textarea>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-top:12px; flex-wrap:wrap; gap:10px;">
+              <span style="font-size:12px; color:var(--text-muted);">Supports standard SQLite/PostgreSQL SELECT statements and multi-table relational joins.</span>
+              <button class="btn btn-primary" onclick="runCustomSql()">▶ Run Query</button>
+            </div>
+            <div id="sqlQueryResultContainer" style="margin-top:16px; display:none;">
+              <div style="font-size:13px; font-weight:700; color:var(--secondary); margin-bottom:8px;" id="sqlQueryStatus"></div>
+              <div class="table-responsive" style="max-height:280px; overflow-y:auto;" id="sqlQueryTableWrapper"></div>
+            </div>
+          </div>
+        </div>
+
+        <div id="schemaTablesContainer">
+          <!-- Populated dynamically -->
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <!-- ============================================================================
+       MODALS
+       ============================================================================ -->
+
+  <!-- Modal: Student Transcript & GPA Breakdown -->
+  <div class="modal-overlay" id="studentTranscriptModal">
+    <div class="modal-container large">
+      <div class="modal-header">
+        <div class="modal-title">🎓 Student Official Academic Transcript</div>
+        <button class="modal-close-btn" onclick="closeModal('studentTranscriptModal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="transcript-header-box">
+          <div>
+            <h2 id="transcriptStudentName" style="font-size:20px; font-weight:700;">Student Name</h2>
+            <div id="transcriptRegNo" style="font-size:14px; color:var(--text-muted); font-weight:600;">Reg #</div>
+            <div id="transcriptProgram" style="font-size:13px; color:var(--secondary); margin-top:4px;">Program</div>
+          </div>
+          <div style="text-align:right;">
+            <div class="gpa-pill" id="transcriptGpaVal">CGPA: 0.00</div>
+            <div id="transcriptAttendanceVal" style="font-size:12px; margin-top:6px; color:var(--text-muted); font-weight:600;">Attendance: 0%</div>
+          </div>
+        </div>
+
+        <h4 style="margin-bottom:10px; font-size:14px;">Enrolled Courses</h4>
+        <div class="table-responsive" style="margin-bottom:20px;">
+          <table>
+            <thead>
+              <tr>
+                <th>Code</th>
+                <th>Course Name</th>
+                <th>Credits</th>
+                <th>Faculty</th>
+                <th>Semester</th>
+                <th>Status</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="transcriptCoursesBody"></tbody>
+          </table>
+        </div>
+
+        <h4 style="margin-bottom:10px; font-size:14px;">Examination Scores & Grades</h4>
+        <div class="table-responsive">
+          <table>
+            <thead>
+              <tr>
+                <th>Course</th>
+                <th>Exam</th>
+                <th>Score</th>
+                <th>Grade</th>
+                <th>Grade Point</th>
+              </tr>
+            </thead>
+            <tbody id="transcriptResultsBody"></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="window.print()">🖨️ Print Transcript</button>
+        <button class="btn btn-primary" onclick="closeModal('studentTranscriptModal')">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Add Student -->
+  <div class="modal-overlay" id="addStudentModal">
+    <div class="modal-container">
+      <div class="modal-header">
+        <div class="modal-title">Register New Student</div>
+        <button class="modal-close-btn" onclick="closeModal('addStudentModal')">&times;</button>
+      </div>
+      <form id="addStudentForm">
+        <div class="modal-body form-grid">
+          <div class="form-group">
+            <label class="form-label">Registration No</label>
+            <input type="text" id="newStudRegNo" class="form-control" placeholder="e.g. FA26-BSE-099" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Student Full Name</label>
+            <input type="text" id="newStudName" class="form-control" placeholder="e.g. Abdullah Tariq" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Email Address</label>
+            <input type="email" id="newStudEmail" class="form-control" placeholder="student@student.edu" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Contact Phone</label>
+            <input type="text" id="newStudPhone" class="form-control" placeholder="+92-300-1234567" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Admission Date</label>
+            <input type="date" id="newStudDate" class="form-control" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Degree Program</label>
+            <select id="newStudProg" class="form-control" required></select>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="closeModal('addStudentModal')">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save Student</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: Add Teacher -->
+  <div class="modal-overlay" id="addTeacherModal">
+    <div class="modal-container">
+      <div class="modal-header">
+        <div class="modal-title">Add Faculty Instructor</div>
+        <button class="modal-close-btn" onclick="closeModal('addTeacherModal')">&times;</button>
+      </div>
+      <form id="addTeacherForm">
+        <div class="modal-body form-grid">
+          <div class="form-group full">
+            <label class="form-label">Faculty Full Name</label>
+            <input type="text" id="newTeachName" class="form-control" placeholder="e.g. Dr. Usman Khalid" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Official Email</label>
+            <input type="email" id="newTeachEmail" class="form-control" placeholder="faculty@university.edu" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Contact Phone</label>
+            <input type="text" id="newTeachPhone" class="form-control" placeholder="+92-300-9876543" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Academic Designation</label>
+            <select id="newTeachDesig" class="form-control" required>
+              <option value="Professor">Professor</option>
+              <option value="Associate Professor">Associate Professor</option>
+              <option value="Assistant Professor">Assistant Professor</option>
+              <option value="Lecturer">Lecturer</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Department</label>
+            <select id="newTeachDept" class="form-control" required></select>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="closeModal('addTeacherModal')">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save Faculty</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: Add Course -->
+  <div class="modal-overlay" id="addCourseModal">
+    <div class="modal-container">
+      <div class="modal-header">
+        <div class="modal-title">Add New Course</div>
+        <button class="modal-close-btn" onclick="closeModal('addCourseModal')">&times;</button>
+      </div>
+      <form id="addCourseForm">
+        <div class="modal-body form-grid">
+          <div class="form-group">
+            <label class="form-label">Course Code</label>
+            <input type="text" id="newCrsCode" class="form-control" placeholder="e.g. CS-410" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Course Title</label>
+            <input type="text" id="newCrsName" class="form-control" placeholder="e.g. Machine Learning" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Credit Hours (1-6)</label>
+            <input type="number" id="newCrsCredits" class="form-control" min="1" max="6" value="3" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Department</label>
+            <select id="newCrsDept" class="form-control" required></select>
+          </div>
+          <div class="form-group full">
+            <label class="form-label">Course Description</label>
+            <textarea id="newCrsDesc" class="form-control" rows="2" placeholder="Course syllabus overview..."></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="closeModal('addCourseModal')">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save Course</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: Add Offering -->
+  <div class="modal-overlay" id="addOfferingModal">
+    <div class="modal-container">
+      <div class="modal-header">
+        <div class="modal-title">Schedule Course Offering</div>
+        <button class="modal-close-btn" onclick="closeModal('addOfferingModal')">&times;</button>
+      </div>
+      <form id="addOfferingForm">
+        <div class="modal-body form-grid">
+          <div class="form-group full">
+            <label class="form-label">Select Course</label>
+            <select id="newOffCourse" class="form-control" required></select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Semester</label>
+            <select id="newOffSemester" class="form-control" required></select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Section</label>
+            <input type="text" id="newOffSection" class="form-control" value="A" required>
+          </div>
+          <div class="form-group full">
+            <label class="form-label">Instructor</label>
+            <select id="newOffTeacher" class="form-control" required></select>
+          </div>
+          <div class="form-group full">
+            <label class="form-label">Primary Room</label>
+            <select id="newOffRoom" class="form-control" required></select>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="closeModal('addOfferingModal')">Cancel</button>
+          <button type="submit" class="btn btn-primary">Create Offering</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: Add Enrollment -->
+  <div class="modal-overlay" id="addEnrollmentModal">
+    <div class="modal-container">
+      <div class="modal-header">
+        <div class="modal-title">Enroll Student in Course</div>
+        <button class="modal-close-btn" onclick="closeModal('addEnrollmentModal')">&times;</button>
+      </div>
+      <form id="addEnrollmentForm">
+        <div class="modal-body form-grid">
+          <div class="form-group full">
+            <label class="form-label">Student</label>
+            <select id="newEnStudent" class="form-control" required></select>
+          </div>
+          <div class="form-group full">
+            <label class="form-label">Course Offering</label>
+            <select id="newEnOffering" class="form-control" required></select>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="closeModal('addEnrollmentModal')">Cancel</button>
+          <button type="submit" class="btn btn-primary">Confirm Enrollment</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: Add Exam -->
+  <div class="modal-overlay" id="addExamModal">
+    <div class="modal-container">
+      <div class="modal-header">
+        <div class="modal-title">Schedule New Examination</div>
+        <button class="modal-close-btn" onclick="closeModal('addExamModal')">&times;</button>
+      </div>
+      <form id="addExamForm">
+        <div class="modal-body form-grid">
+          <div class="form-group full">
+            <label class="form-label">Course Offering</label>
+            <select id="newExamOffering" class="form-control" required></select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Exam Type</label>
+            <select id="newExamType" class="form-control" required>
+              <option value="Quiz">Quiz</option>
+              <option value="Midterm">Midterm</option>
+              <option value="Final">Final</option>
+              <option value="Assignment">Assignment</option>
+              <option value="Project">Project</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Total Marks</label>
+            <input type="number" id="newExamTotal" class="form-control" value="50" min="1" step="0.5" required>
+          </div>
+          <div class="form-group full">
+            <label class="form-label">Exam Date</label>
+            <input type="date" id="newExamDate" class="form-control" required>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="closeModal('addExamModal')">Cancel</button>
+          <button type="submit" class="btn btn-primary">Schedule Exam</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: Record Result -->
+  <div class="modal-overlay" id="recordResultModal">
+    <div class="modal-container">
+      <div class="modal-header">
+        <div class="modal-title">Record Examination Result</div>
+        <button class="modal-close-btn" onclick="closeModal('recordResultModal')">&times;</button>
+      </div>
+      <form id="recordResultForm">
+        <input type="hidden" id="resultExamId">
+        <div class="modal-body form-grid">
+          <div class="form-group full">
+            <label class="form-label">Total Marks For This Exam</label>
+            <div id="resultTotalMarksDisplay" style="font-size:16px; font-weight:700; color:var(--secondary);"></div>
+          </div>
+          <div class="form-group full">
+            <label class="form-label">Select Student</label>
+            <select id="resultStudentSelect" class="form-control" required></select>
+          </div>
+          <div class="form-group full">
+            <label class="form-label">Obtained Marks</label>
+            <input type="number" id="resultObtainedMarks" class="form-control" step="0.5" min="0" placeholder="e.g. 45.5" required>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="closeModal('recordResultModal')">Cancel</button>
+          <button type="submit" class="btn btn-primary">Submit Result</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: Mark Attendance -->
+  <div class="modal-overlay" id="markAttendanceModal">
+    <div class="modal-container">
+      <div class="modal-header">
+        <div class="modal-title">Mark Lecture Attendance</div>
+        <button class="modal-close-btn" onclick="closeModal('markAttendanceModal')">&times;</button>
+      </div>
+      <form id="markAttendanceForm">
+        <div class="modal-body form-grid">
+          <div class="form-group full">
+            <label class="form-label">Course Offering</label>
+            <select id="attOfferingSelect" class="form-control" required></select>
+          </div>
+          <div class="form-group full">
+            <label class="form-label">Student</label>
+            <select id="attStudentSelect" class="form-control" required></select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Date</label>
+            <input type="date" id="attDate" class="form-control" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Status</label>
+            <select id="attStatusSelect" class="form-control" required>
+              <option value="Present">Present</option>
+              <option value="Absent">Absent</option>
+              <option value="Late">Late</option>
+              <option value="Excused">Excused</option>
+            </select>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="closeModal('markAttendanceModal')">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save Attendance</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: Add Timetable Slot -->
+  <div class="modal-overlay" id="addTimetableModal">
+    <div class="modal-container">
+      <div class="modal-header">
+        <div class="modal-title">Allocate Timetable Schedule Slot</div>
+        <button class="modal-close-btn" onclick="closeModal('addTimetableModal')">&times;</button>
+      </div>
+      <form id="addTimetableForm">
+        <div class="modal-body form-grid">
+          <div class="form-group full">
+            <label class="form-label">Course Offering</label>
+            <select id="ttOfferingSelect" class="form-control" required></select>
+          </div>
+          <div class="form-group full">
+            <label class="form-label">Classroom / Lab</label>
+            <select id="ttRoomSelect" class="form-control" required></select>
+          </div>
+          <div class="form-group full">
+            <label class="form-label">Day of Week</label>
+            <select id="ttDaySelect" class="form-control" required>
+              <option value="Monday">Monday</option>
+              <option value="Tuesday">Tuesday</option>
+              <option value="Wednesday">Wednesday</option>
+              <option value="Thursday">Thursday</option>
+              <option value="Friday">Friday</option>
+              <option value="Saturday">Saturday</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Start Time</label>
+            <input type="time" id="ttStartTime" class="form-control" value="09:00" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">End Time</label>
+            <input type="time" id="ttEndTime" class="form-control" value="10:30" required>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="closeModal('addTimetableModal')">Cancel</button>
+          <button type="submit" class="btn btn-primary">Assign Slot</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- JavaScript -->
+  <script src="/static/js/app.js"></script>
+</body>
+</html>
