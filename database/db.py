@@ -9,7 +9,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 DB_DIR = Path(__file__).resolve().parent
-DB_FILE = DB_DIR / "university.db"
+DB_FILE = Path("/tmp/university.db") if os.getenv("VERCEL") else DB_DIR / "university.db"
 SCHEMA_FILE = DB_DIR / "schema.sql"
 SEED_FILE = DB_DIR / "seed.sql"
 
